@@ -113,9 +113,9 @@
     <Compile Include="Exceptions\AppExtensionServiceException.cs" />
     <Compile Include="Exceptions\ConnectionFailure.cs" />
     <Compile Include="Exceptions\ExtensionException.cs" />
-    <Compile Include="ExtensionFinder.cs" />
-    <Compile Include="ExtensionFinderBase.cs" />
-    <Compile Include="ExtensionFinderWithOptions.cs" />
+    <Compile Include="ExtensionList\ExtensionList.cs" />
+    <Compile Include="ExtensionList\AbstractExtensionList.cs" />
+    <Compile Include="ExtensionList\ExtensionListWithOptions.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="IExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

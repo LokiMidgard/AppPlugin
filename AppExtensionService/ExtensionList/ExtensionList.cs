@@ -16,16 +16,17 @@ using Windows.Foundation.Collections;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Media.Imaging;
 
-namespace AppExtensionService
+namespace AppExtensionService.ExtensionList
 {
 
-    public class ExtensionFinder<T, TIn, TOut, TProgress> : ExtensionFinderBase<T, TOut, ExtensionFinder<T, TIn, TOut, TProgress>.ExtensionProvider> where T : AbstractExtension<TIn, TOut, TProgress>
+    public class ExtensionList<T, TIn, TOut, TProgress> : AbstractExtensionList<T, TOut, ExtensionList<T, TIn, TOut, TProgress>.ExtensionProvider>
+        where T : AbstractExtension<TIn, TOut, TProgress>
     {
 
         protected override ExtensionProvider CreateExtensionProvider(AppExtension ext, string serviceName, BitmapImage logo)
             => new ExtensionProvider(ext, serviceName, logo);
 
-        public new sealed class ExtensionProvider : ExtensionFinderBase<T, TOut, ExtensionProvider>.ExtensionProvider, IExtension<TIn, TOut, TProgress>
+        public new sealed class ExtensionProvider : AbstractExtensionList<T, TOut, ExtensionProvider>.ExtensionProvider, IExtension<TIn, TOut, TProgress>
         {
 
             internal ExtensionProvider(AppExtension ext, string serviceName, BitmapImage logo) : base(ext, serviceName, logo)

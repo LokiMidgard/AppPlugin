@@ -16,15 +16,16 @@ using Windows.Foundation.Collections;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Media.Imaging;
 
-namespace AppExtensionService
+namespace AppExtensionService.ExtensionList
 {
 
-    public class ExtensionFinder<T, TIn, TOut, TOption, TProgress> : ExtensionFinderBase<T, TOut, ExtensionFinder<T, TIn, TOut, TOption, TProgress>.ExtensionProvider> where T : AbstractExtension<TIn, TOut, TOption, TProgress>
+    public class ExtensionList<T, TIn, TOut, TOption, TProgress> : AbstractExtensionList<T, TOut, ExtensionList<T, TIn, TOut, TOption, TProgress>.ExtensionProvider>
+        where T : AbstractExtension<TIn, TOut, TOption, TProgress>
     {
 
 
 
-        public new sealed class ExtensionProvider : ExtensionFinderBase<T, TOut, ExtensionProvider>.ExtensionProvider, IExtension<TIn, TOut, TOption, TProgress>
+        public new sealed class ExtensionProvider : AbstractExtensionList<T, TOut, ExtensionProvider>.ExtensionProvider, IExtension<TIn, TOut, TOption, TProgress>
         {
             public Task<TOption> PrototypeOptions { get; }
 

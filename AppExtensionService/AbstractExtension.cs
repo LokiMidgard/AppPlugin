@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AppExtensionService.ExtensionList;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,9 +21,9 @@ namespace AppExtensionService
 
         }
 
-        public static ExtensionFinder<T, TIn, TOut, TProgress> Find<T>() where T : AbstractExtension<TIn, TOut, TProgress>
+        public static ExtensionList<T, TIn, TOut, TProgress> List<T>() where T : AbstractExtension<TIn, TOut, TProgress>
         {
-            return new ExtensionFinder<T, TIn, TOut, TProgress>();
+            return new ExtensionList<T, TIn, TOut, TProgress>();
         }
 
         protected abstract Task<TOut> Execute(TIn input, IProgress<TProgress> progress, CancellationToken cancelToken);

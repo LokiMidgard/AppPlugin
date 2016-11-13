@@ -16,12 +16,13 @@ using Windows.Foundation.Collections;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Media.Imaging;
 
-namespace AppExtensionService
+namespace AppExtensionService.ExtensionList
 {
 
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-    public abstract class ExtensionFinderBase<T, TOut, TExtensionProvider> where T : AbstractBaseExtension<TOut>
-                                                                        where TExtensionProvider : ExtensionFinderBase<T, TOut, TExtensionProvider>.ExtensionProvider
+    public abstract class AbstractExtensionList<T, TOut, TExtensionProvider>
+        where T : AbstractBaseExtension<TOut>
+        where TExtensionProvider : AbstractExtensionList<T, TOut, TExtensionProvider>.ExtensionProvider
     {
         private readonly CoreDispatcher dispatcher;
         private AppExtensionCatalog catalog;
@@ -30,7 +31,7 @@ namespace AppExtensionService
         private ObservableCollection<TExtensionProvider> extensions { get; } = new ObservableCollection<TExtensionProvider>();
         public ReadOnlyObservableCollection<TExtensionProvider> Extensions { get; }
 
-        internal ExtensionFinderBase()
+        internal AbstractExtensionList()
         {
             dispatcher = Windows.UI.Core.CoreWindow.GetForCurrentThread().Dispatcher;
             Extensions = new ReadOnlyObservableCollection<TExtensionProvider>(extensions);
