@@ -19,16 +19,15 @@ using Windows.UI.Xaml.Media.Imaging;
 namespace AppExtensionService.ExtensionList
 {
 
-    public class ExtensionList<T, TIn, TOut, TOption, TProgress> : AbstractExtensionList<T, TOut, ExtensionList<T, TIn, TOut, TOption, TProgress>.ExtensionProvider>
-        where T : AbstractExtension<TIn, TOut, TOption, TProgress>
+    public class ExtensionList<TIn, TOut, TOption, TProgress> : AbstractExtensionList<TOut, ExtensionList< TIn, TOut, TOption, TProgress>.ExtensionProvider>
     {
 
-        internal ExtensionList()
+        internal ExtensionList(string extensionname) : base(extensionname)
         {
 
         }
 
-        public new sealed class ExtensionProvider : AbstractExtensionList<T, TOut, ExtensionProvider>.ExtensionProvider, IExtension<TIn, TOut, TOption, TProgress>
+        public new sealed class ExtensionProvider : AbstractExtensionList< TOut, ExtensionProvider>.ExtensionProvider, IExtension<TIn, TOut, TOption, TProgress>
         {
             public Task<TOption> PrototypeOptions { get; }
 

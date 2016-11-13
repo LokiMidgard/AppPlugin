@@ -40,11 +40,17 @@ namespace AppExtensionService
         /// <summary>
         /// Returns an Object that Lists the Availaible Plugins.
         /// </summary>
-        /// <typeparam name="T">The Type of The Extension.</typeparam>
-        /// <returns>The <see cref="AppExtensionService.ExtensionList<,,,,>"/></returns>
-        public static ExtensionList<T, TIn, TOut, TOption, TProgress> List<T>() where T : AbstractExtension<TIn, TOut, TOption, TProgress>
+        /// <remarks>
+        /// The <paramref name="extensionName"/> length must be less or equal to 39, because of a limitation of the appmanifest.
+        /// </remarks>
+        /// <exception cref="ArgumentException">
+        /// the length of <paramref name="extensionName"/> is 40 or greater.
+        /// </exception>
+        /// <param name="extensionName">The Extension name fedined in the appmanifest.</param>
+        /// <returns>The <see cref="AppExtensionService.ExtensionList<,,,>"/></returns
+        public static ExtensionList<TIn, TOut, TOption, TProgress> List(string extensionName)
         {
-            return new ExtensionList<T, TIn, TOut, TOption, TProgress>();
+            return new ExtensionList<TIn, TOut, TOption, TProgress>(extensionName);
         }
 
         /// <summary>

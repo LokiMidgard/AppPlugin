@@ -20,26 +20,31 @@ namespace AppExtensionService.ExtensionList
 {
 
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-    public abstract class AbstractExtensionList<T, TOut, TExtensionProvider>
-        where T : AbstractBaseExtension<TOut>
-        where TExtensionProvider : AbstractExtensionList<T, TOut, TExtensionProvider>.ExtensionProvider
+    public abstract class AbstractExtensionList<TOut, TExtensionProvider>
+        where TExtensionProvider : AbstractExtensionList<TOut, TExtensionProvider>.ExtensionProvider
     {
         private readonly CoreDispatcher dispatcher;
         private AppExtensionCatalog catalog;
         private const string SERVICE_KEY = "Service";
+        private readonly string extensionName;
 
         private ObservableCollection<TExtensionProvider> extensions { get; } = new ObservableCollection<TExtensionProvider>();
         public ReadOnlyObservableCollection<TExtensionProvider> Extensions { get; }
 
-        internal AbstractExtensionList()
+        internal AbstractExtensionList(string extensionName)
         {
+            if (extensionName == null)
+                throw new ArgumentNullException(nameof(extensionName));
+            if (extensionName.Length > 39)
+                throw new ArgumentException($"The extension name is longer than 39. (was {extensionName.Length})");
+            this.extensionName = extensionName;
             dispatcher = Windows.UI.Core.CoreWindow.GetForCurrentThread().Dispatcher;
             Extensions = new ReadOnlyObservableCollection<TExtensionProvider>(extensions);
         }
 
         public async Task Init()
         {
-            catalog = Windows.ApplicationModel.AppExtensions.AppExtensionCatalog.Open(typeof(T).FullName);
+            catalog = Windows.ApplicationModel.AppExtensions.AppExtensionCatalog.Open(extensionName);
 
             // set up extension management events
             catalog.PackageInstalled += Catalog_PackageInstalled;
