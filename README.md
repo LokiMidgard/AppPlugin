@@ -113,7 +113,7 @@ Consider that a Windows Runtime Component has special requirements. So the imple
 To access the plugin a simple wrapper needs to be created:
 
 ```c#
-    public class ReveresExtension : Windows.ApplicationModel.Background.IBackgroundTask
+    public sealed class ReveresExtension : Windows.ApplicationModel.Background.IBackgroundTask
     {
         private IBackgroundTask internalTask = new ReverseExtensionIntern();
         public void Run(IBackgroundTaskInstance taskInstance)
@@ -121,7 +121,7 @@ To access the plugin a simple wrapper needs to be created:
     }
 
 ```
-Remember that this class may not extend any other class. The internal implementation already implements the interface ```IBackgroundTask``` explicitly
+Remember that this class may not extend any other class and must be sealed. The internal implementation already implements the interface ```IBackgroundTask``` explicitly
 so its ```Run```-Methode can just be called.
 
 ### Deploy a Plugin
