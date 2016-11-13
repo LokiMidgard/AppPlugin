@@ -29,7 +29,7 @@ namespace AppExtensionService
         /// Normaly an AppService uses its own process without UI. It also does not provide a SyncronisationContext. This results that async/await calls will run in the ThreadPool. This includes the Progress report. If the Plugin spans many Tasks, progress will be reported with higher latency.
         /// </remarks>
         /// <param name="useSyncronisationContext">Discrips if the code should be called using a SyncronisationContext.</param>
-        public AbstractExtension(bool useSyncronisationContext) : base(useSyncronisationContext)
+        public AbstractExtension(bool useSyncronisationContext = true) : base(useSyncronisationContext)
         {
 
         }
