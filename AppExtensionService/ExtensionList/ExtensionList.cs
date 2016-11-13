@@ -28,7 +28,7 @@ namespace AppExtensionService.ExtensionList
 
         }
 
-        protected override ExtensionProvider CreateExtensionProvider(AppExtension ext, string serviceName, BitmapImage logo)
+        internal override ExtensionProvider CreateExtensionProvider(AppExtension ext, string serviceName, BitmapImage logo)
             => new ExtensionProvider(ext, serviceName, logo);
 
         public new sealed class ExtensionProvider : AbstractExtensionList<T, TOut, ExtensionProvider>.ExtensionProvider, IExtension<TIn, TOut, TProgress>

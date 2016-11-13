@@ -191,7 +191,7 @@ namespace AppExtensionService.ExtensionList
             }
         }
 
-        protected abstract TExtensionProvider CreateExtensionProvider(AppExtension ext, string serviceName, BitmapImage logo);
+        internal abstract TExtensionProvider CreateExtensionProvider(AppExtension ext, string serviceName, BitmapImage logo);
 
         // loads all extensions associated with a package - used for when package status comes back
         private async Task LoadExtensions(Package package)
@@ -280,9 +280,6 @@ namespace AppExtensionService.ExtensionList
                 #endregion
             }
         }
-
-
-
 
         private abstract class ExtensionConnection : IDisposable
         {

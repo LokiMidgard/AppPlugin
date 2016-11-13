@@ -39,18 +39,15 @@ namespace AppExtensionService.ExtensionList
 
 
             private Task<ExtensionConnection> GetExtension(IProgress<TProgress> progress, CancellationToken cancelTokem) => ExtensionConnection.Create(serviceName, Extension, progress, cancelTokem);
-
-
+            
             public async Task<TOut> Execute(TIn input, TOption options, IProgress<TProgress> progress = null, CancellationToken cancelTokem = default(CancellationToken))
             {
                 using (var extension = await GetExtension(progress, cancelTokem))
                     return await extension.Execute(input, options);
             }
-
-
         }
 
-        protected override ExtensionProvider CreateExtensionProvider(AppExtension ext, string serviceName, BitmapImage logo)
+        internal override ExtensionProvider CreateExtensionProvider(AppExtension ext, string serviceName, BitmapImage logo)
                     => new ExtensionProvider(ext, serviceName, logo);
 
 
