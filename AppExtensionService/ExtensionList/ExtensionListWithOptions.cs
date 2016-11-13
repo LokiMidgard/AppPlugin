@@ -23,7 +23,10 @@ namespace AppExtensionService.ExtensionList
         where T : AbstractExtension<TIn, TOut, TOption, TProgress>
     {
 
+        internal ExtensionList()
+        {
 
+        }
 
         public new sealed class ExtensionProvider : AbstractExtensionList<T, TOut, ExtensionProvider>.ExtensionProvider, IExtension<TIn, TOut, TOption, TProgress>
         {

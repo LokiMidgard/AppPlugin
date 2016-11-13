@@ -23,6 +23,11 @@ namespace AppExtensionService.ExtensionList
         where T : AbstractExtension<TIn, TOut, TProgress>
     {
 
+        internal ExtensionList()
+        {
+
+        }
+
         protected override ExtensionProvider CreateExtensionProvider(AppExtension ext, string serviceName, BitmapImage logo)
             => new ExtensionProvider(ext, serviceName, logo);
 
