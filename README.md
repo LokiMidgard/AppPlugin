@@ -1,5 +1,6 @@
-[![GitHub license](https://img.shields.io/github/license/LokiMidgard/AppExtensionService.svg?style=flat-squar)](https://tldrlegal.com/license/mit-license#summary)
+[![NuGet](https://img.shields.io/nuget/v/AppPlugin.svg?style=flat-square)](https://www.nuget.org/packages/AppPlugin/)
 [![Build status](https://ci.appveyor.com/api/projects/status/7yumsvqwno7l65gc?svg=true)](https://ci.appveyor.com/project/LokiMidgard/appextensionservice)
+[![GitHub license](https://img.shields.io/github/license/LokiMidgard/AppExtensionService.svg?style=flat-squar)](https://tldrlegal.com/license/mit-license#summary)
 
 
 # <img src="https://raw.githubusercontent.com/LokiMidgard/AppExtensionService/master/Assets/Logo.png" width="60px" height="60px" /> AppPlugin
