@@ -2,7 +2,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/7yumsvqwno7l65gc?svg=true)](https://ci.appveyor.com/project/LokiMidgard/appextensionservice)
 
 
-# <img src="https://raw.githubusercontent.com/LokiMidgard/AppExtensionService/master/combine.svg" width="60px" height="60px" /> AppExtensionService 
+# <img src="https://raw.githubusercontent.com/LokiMidgard/AppExtensionService/master/combine.svg" width="60px" height="60px" /> AppPlugin
 This project combines UWP AppServices with AppExtensions and DataContracts in order to realize a more Code orientated way to write pluginss.
 
 ## Overview

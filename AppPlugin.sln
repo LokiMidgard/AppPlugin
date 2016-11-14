@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppPlugin", "AppExtensionService\AppPlugin.csproj", "{D35E5F0F-601C-43BF-82D6-89F51AC6AA8B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppPlugin", "AppPlugin\AppPlugin.csproj", "{D35E5F0F-601C-43BF-82D6-89F51AC6AA8B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepoFiles", "RepoFiles", "{5F8A45D1-4CA5-433A-8CF5-3E9D17CB21F1}"
 	ProjectSection(SolutionItems) = preProject
