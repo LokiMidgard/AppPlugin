@@ -1,4 +1,4 @@
-﻿using AppExtensionService.ExtensionList;
+﻿using AppPlugin.PluginList;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +12,7 @@ using Windows.ApplicationModel.AppService;
 using Windows.ApplicationModel.Background;
 using Windows.Foundation.Collections;
 
-namespace AppExtensionService
+namespace AppPlugin
 {
     /// <summary>
     /// Abstract class that can be implemented to define a simple Plugin that provides one Function that takes an additional option argument.
@@ -21,7 +21,7 @@ namespace AppExtensionService
     /// <typeparam name="TOut">The return type of the function. (Must have a valid <seealso cref="DataContractAttribute"/> )</typeparam>
     /// <typeparam name="TOption">The Type that will be used to pass the options to f.</typeparam>
     /// <typeparam name="TProgress">The type that will be used to report progress. (Must have a valid <seealso cref="DataContractAttribute"/> )</typeparam>
-    public abstract class AbstractExtension<TIn, TOut, TOption, TProgress> : AbstractBaseExtension<TOut>
+    public abstract class AbstractPlugin<TIn, TOut, TOption, TProgress> : AbstractBasePlugin<TOut>
     {
 
 
@@ -32,7 +32,7 @@ namespace AppExtensionService
         /// Normaly an AppService uses its own process without UI. It also does not provide a SyncronisationContext. This results that async/await calls will run in the ThreadPool. This includes the Progress report. If the Plugin spans many Tasks, progress will be reported with higher latency.
         /// </remarks>
         /// <param name="useSyncronisationContext">Discrips if the code should be called using a SyncronisationContext.</param>
-        public AbstractExtension(bool useSyncronisationContext = true) : base(useSyncronisationContext)
+        public AbstractPlugin(bool useSyncronisationContext = true) : base(useSyncronisationContext)
         {
 
         }
@@ -41,16 +41,16 @@ namespace AppExtensionService
         /// Returns an Object that Lists the Availaible Plugins.
         /// </summary>
         /// <remarks>
-        /// The <paramref name="extensionName"/> length must be less or equal to 39, because of a limitation of the appmanifest.
+        /// The <paramref name="pluginName"/> length must be less or equal to 39, because of a limitation of the appmanifest.
         /// </remarks>
         /// <exception cref="ArgumentException">
-        /// the length of <paramref name="extensionName"/> is 40 or greater.
+        /// the length of <paramref name="pluginName"/> is 40 or greater.
         /// </exception>
-        /// <param name="extensionName">The Extension name fedined in the appmanifest.</param>
-        /// <returns>The <see cref="AppExtensionService.ExtensionList<,,,>"/></returns
-        public static ExtensionList<TIn, TOut, TOption, TProgress> List(string extensionName)
+        /// <param name="pluginName">The Plugin name defined in the appmanifest.</param>
+        /// <returns>The <see cref="AppPlugin.PluginList<,,,>"/></returns
+        public static PluginList<TIn, TOut, TOption, TProgress> List(string pluginName)
         {
-            return new ExtensionList<TIn, TOut, TOption, TProgress>(extensionName);
+            return new PluginList<TIn, TOut, TOption, TProgress>(pluginName);
         }
 
         /// <summary>

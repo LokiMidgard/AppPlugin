@@ -16,35 +16,35 @@ using Windows.Foundation.Collections;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Media.Imaging;
 
-namespace AppExtensionService.ExtensionList
+namespace AppPlugin.PluginList
 {
 
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-    public abstract class AbstractExtensionList<TOut, TExtensionProvider>
-        where TExtensionProvider : AbstractExtensionList<TOut, TExtensionProvider>.ExtensionProvider
+    public abstract class AbstractPluginList<TOut, TPluginProvider>
+        where TPluginProvider : AbstractPluginList<TOut, TPluginProvider>.PluginProvider
     {
         private readonly CoreDispatcher dispatcher;
         private AppExtensionCatalog catalog;
         private const string SERVICE_KEY = "Service";
-        private readonly string extensionName;
+        private readonly string pluginName;
 
-        private ObservableCollection<TExtensionProvider> extensions { get; } = new ObservableCollection<TExtensionProvider>();
-        public ReadOnlyObservableCollection<TExtensionProvider> Extensions { get; }
+        private ObservableCollection<TPluginProvider> plugins { get; } = new ObservableCollection<TPluginProvider>();
+        public ReadOnlyObservableCollection<TPluginProvider> Plugins { get; }
 
-        internal AbstractExtensionList(string extensionName)
+        internal AbstractPluginList(string pluginName)
         {
-            if (extensionName == null)
-                throw new ArgumentNullException(nameof(extensionName));
-            if (extensionName.Length > 39)
-                throw new ArgumentException($"The extension name is longer than 39. (was {extensionName.Length})");
-            this.extensionName = extensionName;
+            if (pluginName == null)
+                throw new ArgumentNullException(nameof(pluginName));
+            if (pluginName.Length > 39)
+                throw new ArgumentException($"The Plugin name is longer than 39. (was {pluginName.Length})");
+            this.pluginName = pluginName;
             dispatcher = Windows.UI.Core.CoreWindow.GetForCurrentThread().Dispatcher;
-            Extensions = new ReadOnlyObservableCollection<TExtensionProvider>(extensions);
+            Plugins = new ReadOnlyObservableCollection<TPluginProvider>(plugins);
         }
 
         public async Task Init()
         {
-            catalog = Windows.ApplicationModel.AppExtensions.AppExtensionCatalog.Open(extensionName);
+            catalog = Windows.ApplicationModel.AppExtensions.AppExtensionCatalog.Open(pluginName);
 
             // set up extension management events
             catalog.PackageInstalled += Catalog_PackageInstalled;
@@ -163,7 +163,7 @@ namespace AppExtensionService.ExtensionList
             }
 
             // if its already existing then this is an update
-            var existingExt = this.extensions.Where(e => e.UniqueId == identifier).FirstOrDefault();
+            var existingExt = this.plugins.Where(e => e.UniqueId == identifier).FirstOrDefault();
 
             // new extension
             if (existingExt == null)
@@ -181,10 +181,10 @@ namespace AppExtensionService.ExtensionList
                 logo.SetSource(filestream);
 
                 // create new extension
-                var nExt = CreateExtensionProvider(ext, serviceName, logo);
+                var nExt = CreatePluginProvider(ext, serviceName, logo);
 
                 // Add it to extension list
-                extensions.Add(nExt);
+                plugins.Add(nExt);
                 nExt.IsEnabled = true;
             }
             // update
@@ -196,14 +196,14 @@ namespace AppExtensionService.ExtensionList
             }
         }
 
-        internal abstract TExtensionProvider CreateExtensionProvider(AppExtension ext, string serviceName, BitmapImage logo);
+        internal abstract TPluginProvider CreatePluginProvider(AppExtension ext, string serviceName, BitmapImage logo);
 
         // loads all extensions associated with a package - used for when package status comes back
         private async Task LoadExtensions(Package package)
         {
             await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                extensions.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = true; });
+                plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = true; });
             });
         }
 
@@ -212,7 +212,7 @@ namespace AppExtensionService.ExtensionList
         {
             await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                extensions.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = false; });
+                plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = false; });
             });
         }
 
@@ -221,18 +221,18 @@ namespace AppExtensionService.ExtensionList
         {
             await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                extensions.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = false; extensions.Remove(e); });
+                plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = false; plugins.Remove(e); });
             });
         }
 
 
-        public abstract class ExtensionProvider
+        public abstract class PluginProvider
         {
             public AppExtension Extension { get; private set; }
             public BitmapImage Logo { get; private set; }
             protected string serviceName { get; private set; }
 
-            internal ExtensionProvider(AppExtension ext, string serviceName, BitmapImage logo)
+            internal PluginProvider(AppExtension ext, string serviceName, BitmapImage logo)
             {
                 this.Extension = ext;
                 this.serviceName = serviceName;
@@ -286,14 +286,14 @@ namespace AppExtensionService.ExtensionList
             }
         }
 
-        private abstract class ExtensionConnection : IDisposable
+        private abstract class PluginConnection : IDisposable
         {
             private readonly AppServiceConnection connection;
             private bool isDisposed;
             private readonly CancellationToken cancelTokem;
             private readonly Guid id = Guid.NewGuid();
 
-            private ExtensionConnection(AppServiceConnection connection, CancellationToken cancelTokem = default(CancellationToken))
+            private PluginConnection(AppServiceConnection connection, CancellationToken cancelTokem = default(CancellationToken))
             {
                 this.connection = connection;
                 connection.ServiceClosed += Connection_ServiceClosed;
@@ -307,18 +307,18 @@ namespace AppExtensionService.ExtensionList
             {
                 var valueSet = new ValueSet();
 
-                valueSet.Add(AbstractExtension<object, object, object>.ID_KEY, id);
-                valueSet.Add(AbstractExtension<object, object, object>.CANCEL_KEY, true);
+                valueSet.Add(AbstractPlugin<object, object, object>.ID_KEY, id);
+                valueSet.Add(AbstractPlugin<object, object, object>.CANCEL_KEY, true);
 
                 await connection.SendMessageAsync(valueSet);
             }
 
             private async void Connection_RequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
             {
-                if (!args.Request.Message.ContainsKey(AbstractExtension<object, object, object>.ID_KEY))
+                if (!args.Request.Message.ContainsKey(AbstractPlugin<object, object, object>.ID_KEY))
                     return;
 
-                var id = (Guid)args.Request.Message[AbstractExtension<object, object, object>.ID_KEY];
+                var id = (Guid)args.Request.Message[AbstractPlugin<object, object, object>.ID_KEY];
                 if (this.id != id)
                     return;
                 var valueSet = await RequestRecived(sender, args);

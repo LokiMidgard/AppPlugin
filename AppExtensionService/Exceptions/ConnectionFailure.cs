@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.AppService;
 
-namespace AppExtensionService.Exceptions
+namespace AppPlugin.Exceptions
 {
 
     public class ConnectionFailureException : Exception

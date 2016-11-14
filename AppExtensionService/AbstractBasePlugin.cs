@@ -12,13 +12,13 @@ using Windows.ApplicationModel.AppService;
 using Windows.ApplicationModel.Background;
 using Windows.Foundation.Collections;
 
-namespace AppExtensionService
+namespace AppPlugin
 {
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-    public abstract class AbstractBaseExtension<TOut> : IBackgroundTask
+    public abstract class AbstractBasePlugin<TOut> : IBackgroundTask
     {
 
-        internal AbstractBaseExtension(bool useSyncronisationContext)
+        internal AbstractBasePlugin(bool useSyncronisationContext)
         {
             this.useSyncronisationContext = useSyncronisationContext;
         }
@@ -122,7 +122,7 @@ namespace AppExtensionService
             {
                 id = (Guid)args.Request.Message[ID_KEY];
                 if (idDirectory.ContainsKey(id.Value))
-                    throw new Exceptions.AppExtensionServiceException("Start was already send.");
+                    throw new Exceptions.PluginException("Start was already send.");
                 var cancellationTokenSource = new CancellationTokenSource();
                 idDirectory.Add(id.Value, cancellationTokenSource);
 

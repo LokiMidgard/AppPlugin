@@ -7,8 +7,8 @@
     <ProjectGuid>{D35E5F0F-601C-43BF-82D6-89F51AC6AA8B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AppExtensionService</RootNamespace>
-    <AssemblyName>AppExtensionService</AssemblyName>
+    <RootNamespace>AppPlugin</RootNamespace>
+    <AssemblyName>AppPlugin</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion>10.0.14393.0</TargetPlatformVersion>
@@ -104,20 +104,20 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <None Include="AppExtensionService.nuspec" />
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AbstractBaseExtension.cs" />
-    <Compile Include="AbstractExtension.cs" />
-    <Compile Include="AbstractExtensionWithOptins.cs" />
-    <Compile Include="Exceptions\AppExtensionServiceException.cs" />
+    <Compile Include="AbstractBasePlugin.cs" />
+    <Compile Include="AbstractPlugin.cs" />
+    <Compile Include="AbstractPluginWithOptins.cs" />
     <Compile Include="Exceptions\ConnectionFailure.cs" />
-    <Compile Include="Exceptions\ExtensionException.cs" />
-    <Compile Include="ExtensionList\ExtensionList.cs" />
-    <Compile Include="ExtensionList\AbstractExtensionList.cs" />
-    <Compile Include="ExtensionList\ExtensionListWithOptions.cs" />
+    <Compile Include="Exceptions\PluginException.cs" />
+    <Compile Include="PluginList\PluginList.cs" />
+    <Compile Include="PluginList\AbstractPluginList.cs" />
+    <Compile Include="PluginList\PluginListWithOptions.cs" />
     <Compile Include="Helper.cs" />
-    <Compile Include="IExtension.cs" />
+    <Compile Include="IPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\AppExtensionService.rd.xml" />
   </ItemGroup>

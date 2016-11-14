@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("AppExtensionService")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("AppPlugin")]
+[assembly: AssemblyDescription("This project combines UWP AppServices with AppExtensions and DataContracts in order to realize a more Code orientated way to write extensions.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Patrick Kranz")]
-[assembly: AssemblyProduct("AppExtensionService")]
+[assembly: AssemblyProduct("AppPlugin")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

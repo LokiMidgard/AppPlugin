@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace AppExtensionService
+namespace AppPlugin
 {
     internal static class Helper
     {

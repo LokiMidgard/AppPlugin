@@ -16,38 +16,38 @@ using Windows.Foundation.Collections;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Media.Imaging;
 
-namespace AppExtensionService.ExtensionList
+namespace AppPlugin.PluginList
 {
 
-    public class ExtensionList<TIn, TOut, TProgress> : AbstractExtensionList<TOut, ExtensionList<TIn, TOut, TProgress>.ExtensionProvider>
+    public class PluginList<TIn, TOut, TProgress> : AbstractPluginList<TOut, PluginList<TIn, TOut, TProgress>.PluginProvider>
     {
 
-        internal ExtensionList(string extensionname) : base(extensionname)
+        internal PluginList(string pluginName) : base(pluginName)
         {
 
         }
 
-        internal override ExtensionProvider CreateExtensionProvider(AppExtension ext, string serviceName, BitmapImage logo)
-            => new ExtensionProvider(ext, serviceName, logo);
+        internal override PluginProvider CreatePluginProvider(AppExtension ext, string serviceName, BitmapImage logo)
+            => new PluginProvider(ext, serviceName, logo);
 
-        public new sealed class ExtensionProvider : AbstractExtensionList<TOut, ExtensionProvider>.ExtensionProvider, IExtension<TIn, TOut, TProgress>
+        public new sealed class PluginProvider : AbstractPluginList<TOut, PluginProvider>.PluginProvider, IPlugin<TIn, TOut, TProgress>
         {
 
-            internal ExtensionProvider(AppExtension ext, string serviceName, BitmapImage logo) : base(ext, serviceName, logo)
+            internal PluginProvider(AppExtension ext, string serviceName, BitmapImage logo) : base(ext, serviceName, logo)
             {
             }
 
-            private Task<ExtensionConnection> GetExtension(IProgress<TProgress> progress, CancellationToken cancelTokem) => ExtensionConnection.Create(serviceName, Extension, progress, cancelTokem);
+            private Task<PluginConnection> GetPluginConnection(IProgress<TProgress> progress, CancellationToken cancelTokem) => PluginConnection.Create(serviceName, Extension, progress, cancelTokem);
 
             public async Task<TOut> Execute(TIn input, IProgress<TProgress> progress = null, CancellationToken cancelTokem = default(CancellationToken))
             {
-                using (var extension = await GetExtension(progress, cancelTokem))
-                    return await extension.Execute(input);
+                using (var plugin = await GetPluginConnection(progress, cancelTokem))
+                    return await plugin.Execute(input);
             }
 
         }
 
-        private sealed class ExtensionConnection : IDisposable
+        private sealed class PluginConnection : IDisposable
         {
             private readonly AppServiceConnection connection;
             private bool isDisposed;
@@ -55,7 +55,7 @@ namespace AppExtensionService.ExtensionList
             private readonly CancellationToken cancelTokem;
             private readonly Guid id = Guid.NewGuid();
 
-            private ExtensionConnection(AppServiceConnection connection, IProgress<TProgress> progress, CancellationToken cancelTokem = default(CancellationToken))
+            private PluginConnection(AppServiceConnection connection, IProgress<TProgress> progress, CancellationToken cancelTokem = default(CancellationToken))
             {
                 this.connection = connection;
                 connection.ServiceClosed += Connection_ServiceClosed;
@@ -69,24 +69,24 @@ namespace AppExtensionService.ExtensionList
             {
                 var valueSet = new ValueSet();
 
-                valueSet.Add(AbstractExtension<object, object, object>.ID_KEY, id);
-                valueSet.Add(AbstractExtension<object, object, object>.CANCEL_KEY, true);
+                valueSet.Add(AbstractPlugin<object, object, object>.ID_KEY, id);
+                valueSet.Add(AbstractPlugin<object, object, object>.CANCEL_KEY, true);
 
                 await connection.SendMessageAsync(valueSet);
             }
 
             private async void Connection_RequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
             {
-                if (!args.Request.Message.ContainsKey(AbstractExtension<object, object, object>.PROGRESS_KEY))
+                if (!args.Request.Message.ContainsKey(AbstractPlugin<object, object, object>.PROGRESS_KEY))
                     return;
-                if (!args.Request.Message.ContainsKey(AbstractExtension<object, object, object>.ID_KEY))
+                if (!args.Request.Message.ContainsKey(AbstractPlugin<object, object, object>.ID_KEY))
                     return;
 
-                var id = (Guid)args.Request.Message[AbstractExtension<object, object, object>.ID_KEY];
+                var id = (Guid)args.Request.Message[AbstractPlugin<object, object, object>.ID_KEY];
                 if (this.id != id)
                     return;
 
-                var progressString = args.Request.Message[AbstractExtension<object, object, object>.PROGRESS_KEY] as string;
+                var progressString = args.Request.Message[AbstractPlugin<object, object, object>.PROGRESS_KEY] as string;
 
                 var progress = Helper.DeSerilize<TProgress>(progressString);
 
@@ -100,11 +100,11 @@ namespace AppExtensionService.ExtensionList
                 Dispose();
             }
 
-            public static async Task<ExtensionConnection> Create(string serviceName, AppExtension appExtension, IProgress<TProgress> progress, CancellationToken cancelTokem = default(CancellationToken))
+            public static async Task<PluginConnection> Create(string serviceName, AppExtension appExtension, IProgress<TProgress> progress, CancellationToken cancelTokem = default(CancellationToken))
             {
                 var connection = new AppServiceConnection();
 
-                var extensionConnection = new ExtensionConnection(connection, progress, cancelTokem);
+                var pluginConnection = new PluginConnection(connection, progress, cancelTokem);
                 connection.AppServiceName = serviceName;
                 connection.PackageFamilyName = appExtension.Package.Id.FamilyName;
                 AppServiceConnectionStatus status = await connection.OpenAsync();
@@ -114,7 +114,7 @@ namespace AppExtensionService.ExtensionList
                 //If the new connection opened successfully we're done here
                 if (status == AppServiceConnectionStatus.Success)
                 {
-                    return extensionConnection;
+                    return pluginConnection;
                 }
                 else
                 {
@@ -142,17 +142,17 @@ namespace AppExtensionService.ExtensionList
                 string inputString = Helper.Serilize(input);
 
                 var inputs = new ValueSet();
-                inputs.Add(AbstractExtension<object, object, object>.START_KEY, inputString);
-                inputs.Add(AbstractExtension<object, object, object>.ID_KEY, id);
+                inputs.Add(AbstractPlugin<object, object, object>.START_KEY, inputString);
+                inputs.Add(AbstractPlugin<object, object, object>.ID_KEY, id);
                 AppServiceResponse response = await connection.SendMessageAsync(inputs);
 
                 if (response.Status != AppServiceResponseStatus.Success)
                     throw new Exceptions.ConnectionFailureException(response.Status);
-                if (response.Message.ContainsKey(AbstractExtension<object, object, object>.ERROR_KEY))
-                    throw new Exceptions.ExtensionException(response.Message[AbstractExtension<object, object, object>.ERROR_KEY] as string);
-                if (!response.Message.ContainsKey(AbstractExtension<object, object, object>.RESULT_KEY))
+                if (response.Message.ContainsKey(AbstractPlugin<object, object, object>.ERROR_KEY))
+                    throw new Exceptions.PluginException(response.Message[AbstractPlugin<object, object, object>.ERROR_KEY] as string);
+                if (!response.Message.ContainsKey(AbstractPlugin<object, object, object>.RESULT_KEY))
                     return default(TOut);
-                var outputString = response.Message[AbstractExtension<object, object, object>.RESULT_KEY] as string;
+                var outputString = response.Message[AbstractPlugin<object, object, object>.RESULT_KEY] as string;
 
                 if (String.IsNullOrWhiteSpace(outputString))
                     return default(TOut);
