@@ -33,16 +33,16 @@ namespace AppPlugin.PluginList
 
             internal PluginProvider(AppExtension ext, string serviceName, BitmapImage logo) : base(ext, serviceName, logo)
             {
-                PrototypeOptions = GetPlugin(null, default(CancellationToken)).ContinueWith(x => x.Result.RequestOptions()).Unwrap();
+                this.PrototypeOptions = GetPlugin(null, default(CancellationToken)).ContinueWith(x => x.Result.RequestOptionsAsync()).Unwrap();
             }
 
 
-            private Task<PluginConnection> GetPlugin(IProgress<TProgress> progress, CancellationToken cancelTokem) => PluginConnection.Create(serviceName, Extension, progress, cancelTokem);
+            private Task<PluginConnection> GetPlugin(IProgress<TProgress> progress, CancellationToken cancelTokem) => PluginConnection.CreateAsync(this.ServiceName, this.Extension, progress, cancelTokem);
             
-            public async Task<TOut> Execute(TIn input, TOption options, IProgress<TProgress> progress = null, CancellationToken cancelTokem = default(CancellationToken))
+            public async Task<TOut> ExecuteAsync(TIn input, TOption options, IProgress<TProgress> progress = null, CancellationToken cancelTokem = default(CancellationToken))
             {
                 using (var plugin = await GetPlugin(progress, cancelTokem))
-                    return await plugin.Execute(input, options);
+                    return await plugin.ExecuteAsync(input, options);
             }
         }
 
@@ -64,33 +64,33 @@ namespace AppPlugin.PluginList
             private PluginConnection(AppServiceConnection connection, IProgress<TProgress> progress, CancellationToken cancelTokem = default(CancellationToken))
             {
                 this.connection = connection;
-                connection.ServiceClosed += Connection_ServiceClosed;
-                connection.RequestReceived += Connection_RequestReceived;
+                connection.ServiceClosed += this.Connection_ServiceClosed;
+                connection.RequestReceived += this.Connection_RequestReceived;
                 this.progress = progress;
                 this.cancelTokem = cancelTokem;
-                cancelTokem.Register(Canceld);
+                cancelTokem.Register(this.Canceld);
             }
 
             private async void Canceld()
             {
                 var valueSet = new ValueSet();
 
-                valueSet.Add(AbstractPlugin<object, object, object>.ID_KEY, id);
+                valueSet.Add(AbstractPlugin<object, object, object>.ID_KEY, this.id);
                 valueSet.Add(AbstractPlugin<object, object, object>.CANCEL_KEY, true);
 
-                await connection.SendMessageAsync(valueSet);
+                await this.connection.SendMessageAsync(valueSet);
             }
 
-            public async Task<TOption> RequestOptions()
+            public async Task<TOption> RequestOptionsAsync()
             {
-                if (isDisposed)
+                if (this.isDisposed)
                     throw new ObjectDisposedException(this.ToString());
 
 
                 var inputs = new ValueSet();
                 inputs.Add(AbstractPlugin<object, object, object>.OPTIONS_REQUEST_KEY, true);
 
-                AppServiceResponse response = await connection.SendMessageAsync(inputs);
+                var response = await this.connection.SendMessageAsync(inputs);
 
                 if (response.Status != AppServiceResponseStatus.Success)
                     throw new Exceptions.ConnectionFailureException(response.Status);
@@ -133,7 +133,7 @@ namespace AppPlugin.PluginList
                 Dispose();
             }
 
-            public static async Task<PluginConnection> Create(string serviceName, AppExtension appExtension, IProgress<TProgress> progress, CancellationToken cancelTokem = default(CancellationToken))
+            public static async Task<PluginConnection> CreateAsync(string serviceName, AppExtension appExtension, IProgress<TProgress> progress, CancellationToken cancelTokem = default(CancellationToken))
             {
                 var connection = new AppServiceConnection();
 
@@ -142,7 +142,7 @@ namespace AppPlugin.PluginList
 
                 connection.PackageFamilyName = appExtension.Package.Id.FamilyName;
 
-                AppServiceConnectionStatus status = await connection.OpenAsync();
+                var status = await connection.OpenAsync();
 
                 //If the new connection opened successfully we're done here
                 if (status == AppServiceConnectionStatus.Success)
@@ -161,15 +161,15 @@ namespace AppPlugin.PluginList
 
             public void Dispose()
             {
-                if (isDisposed)
+                if (this.isDisposed)
                     return;
-                connection.Dispose();
-                isDisposed = true;
+                this.connection.Dispose();
+                this.isDisposed = true;
             }
 
-            public async Task<TOut> Execute(TIn input, TOption option)
+            public async Task<TOut> ExecuteAsync(TIn input, TOption option)
             {
-                if (isDisposed)
+                if (this.isDisposed)
                     throw new ObjectDisposedException(this.ToString());
 
                 string inputString = Helper.Serilize(input);
@@ -178,9 +178,9 @@ namespace AppPlugin.PluginList
                 var inputs = new ValueSet();
                 inputs.Add(AbstractPlugin<object, object, object>.START_KEY, inputString);
                 inputs.Add(AbstractPlugin<object, object, object>.OPTION_KEY, optionString);
-                inputs.Add(AbstractPlugin<object, object, object>.ID_KEY, id);
+                inputs.Add(AbstractPlugin<object, object, object>.ID_KEY, this.id);
 
-                AppServiceResponse response = await connection.SendMessageAsync(inputs);
+                var response = await this.connection.SendMessageAsync(inputs);
 
                 if (response.Status != AppServiceResponseStatus.Success)
                     throw new Exceptions.ConnectionFailureException(response.Status);

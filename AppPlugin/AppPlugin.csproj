@@ -113,6 +113,7 @@
     <Compile Include="AbstractPluginWithOptins.cs" />
     <Compile Include="Exceptions\ConnectionFailure.cs" />
     <Compile Include="Exceptions\PluginException.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="PluginList\PluginList.cs" />
     <Compile Include="PluginList\AbstractPluginList.cs" />
     <Compile Include="PluginList\PluginListWithOptions.cs" />

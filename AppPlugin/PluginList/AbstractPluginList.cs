@@ -28,59 +28,57 @@ namespace AppPlugin.PluginList
         private const string SERVICE_KEY = "Service";
         private readonly string pluginName;
 
-        private ObservableCollection<TPluginProvider> plugins { get; } = new ObservableCollection<TPluginProvider>();
+        private readonly ObservableCollection<TPluginProvider> plugins = new ObservableCollection<TPluginProvider>();
         public ReadOnlyObservableCollection<TPluginProvider> Plugins { get; }
 
         internal AbstractPluginList(string pluginName)
         {
-            if (pluginName == null)
-                throw new ArgumentNullException(nameof(pluginName));
+            this.pluginName = pluginName ?? throw new ArgumentNullException(nameof(pluginName));
             if (pluginName.Length > 39)
                 throw new ArgumentException($"The Plugin name is longer than 39. (was {pluginName.Length})");
-            this.pluginName = pluginName;
-            dispatcher = Windows.UI.Core.CoreWindow.GetForCurrentThread().Dispatcher;
-            Plugins = new ReadOnlyObservableCollection<TPluginProvider>(plugins);
+            this.dispatcher = Windows.UI.Core.CoreWindow.GetForCurrentThread().Dispatcher;
+            this.Plugins = new ReadOnlyObservableCollection<TPluginProvider>(this.plugins);
         }
 
-        public async Task Init()
+        public async Task InitAsync()
         {
-            catalog = Windows.ApplicationModel.AppExtensions.AppExtensionCatalog.Open(pluginName);
+            this.catalog = AppExtensionCatalog.Open(this.pluginName);
 
             // set up extension management events
-            catalog.PackageInstalled += Catalog_PackageInstalled;
-            catalog.PackageUpdated += Catalog_PackageUpdated;
-            catalog.PackageUninstalling += Catalog_PackageUninstalling;
-            catalog.PackageUpdating += Catalog_PackageUpdating;
-            catalog.PackageStatusChanged += Catalog_PackageStatusChanged;
+            this.catalog.PackageInstalled += this.Catalog_PackageInstalled;
+            this.catalog.PackageUpdated += this.Catalog_PackageUpdated;
+            this.catalog.PackageUninstalling += this.Catalog_PackageUninstalling;
+            this.catalog.PackageUpdating += this.Catalog_PackageUpdating;
+            this.catalog.PackageStatusChanged += this.Catalog_PackageStatusChanged;
 
 
 
             // Scan all extensions
 
-            await FindAllExtensions();
+            await FindAllExtensionsAsync();
         }
 
 
 
-        private async Task FindAllExtensions()
+        private async Task FindAllExtensionsAsync()
         {
             // load all the extensions currently installed
-            var extensions = await catalog.FindAllAsync();
+            var extensions = await this.catalog.FindAllAsync();
 
             foreach (var ext in extensions)
             {
                 // load this extension
-                await LoadExtension(ext);
+                await LoadExtensionAsync(ext);
             }
         }
 
 
         private async void Catalog_PackageInstalled(AppExtensionCatalog sender, AppExtensionPackageInstalledEventArgs args)
         {
-            await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                foreach (AppExtension ext in args.Extensions)
-                    await LoadExtension(ext);
+                foreach (var ext in args.Extensions)
+                    await LoadExtensionAsync(ext);
             });
         }
 
@@ -89,10 +87,10 @@ namespace AppPlugin.PluginList
 
         private async void Catalog_PackageUpdated(AppExtensionCatalog sender, AppExtensionPackageUpdatedEventArgs args)
         {
-            await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                foreach (AppExtension ext in args.Extensions)
-                    await LoadExtension(ext);
+                foreach (var ext in args.Extensions)
+                    await LoadExtensionAsync(ext);
             });
         }
 
@@ -102,7 +100,7 @@ namespace AppPlugin.PluginList
 
         private async void Catalog_PackageUpdating(AppExtensionCatalog sender, AppExtensionPackageUpdatingEventArgs args)
         {
-            await UnloadExtensions(args.Package);
+            await UnloadExtensionsAsync(args.Package);
         }
 
 
@@ -111,7 +109,7 @@ namespace AppPlugin.PluginList
 
         private async void Catalog_PackageUninstalling(AppExtensionCatalog sender, AppExtensionPackageUninstallingEventArgs args)
         {
-            await RemoveExtensions(args.Package);
+            await RemoveExtensionsAsync(args.Package);
         }
 
 
@@ -126,7 +124,7 @@ namespace AppPlugin.PluginList
             {
                 // if it's offline unload only
                 if (args.Package.Status.PackageOffline)
-                    await UnloadExtensions(args.Package);
+                    await UnloadExtensionsAsync(args.Package);
                 // package is being serviced or deployed
                 else if (args.Package.Status.Servicing || args.Package.Status.DeploymentInProgress)
                 {                    // ignore these package status events                
@@ -134,21 +132,21 @@ namespace AppPlugin.PluginList
                 // package is tampered or invalid or some other issue
                 // glyphing the extensions would be a good user experience
                 else
-                    await RemoveExtensions(args.Package);
+                    await RemoveExtensionsAsync(args.Package);
 
             }
             // if package is now OK, attempt to load the extensions
             else
             {
                 // try to load any extensions associated with this package
-                await LoadExtensions(args.Package);
+                await LoadExtensionsAsync(args.Package);
             }
         }
 
 
 
         // loads an extension
-        private async Task LoadExtension(AppExtension ext)
+        private async Task LoadExtensionAsync(AppExtension ext)
         {
             // get unique identifier for this extension
             string identifier = ext.AppInfo.AppUserModelId + "!" + ext.Id;
@@ -177,14 +175,14 @@ namespace AppPlugin.PluginList
 
                 // get logo 
                 var filestream = await (ext.AppInfo.DisplayInfo.GetLogo(new Windows.Foundation.Size(1, 1))).OpenReadAsync();
-                BitmapImage logo = new BitmapImage();
+                var logo = new BitmapImage();
                 logo.SetSource(filestream);
 
                 // create new extension
                 var nExt = CreatePluginProvider(ext, serviceName, logo);
 
                 // Add it to extension list
-                plugins.Add(nExt);
+                this.plugins.Add(nExt);
                 nExt.IsEnabled = true;
             }
             // update
@@ -192,36 +190,36 @@ namespace AppPlugin.PluginList
             {
 
                 // update the extension
-                await existingExt.Update(ext);
+                await existingExt.UpdateAsync(ext);
             }
         }
 
         internal abstract TPluginProvider CreatePluginProvider(AppExtension ext, string serviceName, BitmapImage logo);
 
         // loads all extensions associated with a package - used for when package status comes back
-        private async Task LoadExtensions(Package package)
+        private async Task LoadExtensionsAsync(Package package)
         {
-            await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = true; });
+                this.plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = true; });
             });
         }
 
         // unloads all extensions associated with a package - used for updating and when package status goes away
-        private async Task UnloadExtensions(Package package)
+        private async Task UnloadExtensionsAsync(Package package)
         {
-            await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = false; });
+                this.plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = false; });
             });
         }
 
         // removes all extensions associated with a package - used when removing a package or it becomes invalid
-        private async Task RemoveExtensions(Package package)
+        private async Task RemoveExtensionsAsync(Package package)
         {
-            await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = false; plugins.Remove(e); });
+                this.plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = false; this.plugins.Remove(e); });
             });
         }
 
@@ -230,23 +228,23 @@ namespace AppPlugin.PluginList
         {
             public AppExtension Extension { get; private set; }
             public BitmapImage Logo { get; private set; }
-            protected string serviceName { get; private set; }
+            protected string ServiceName { get; private set; }
 
             internal PluginProvider(AppExtension ext, string serviceName, BitmapImage logo)
             {
                 this.Extension = ext;
-                this.serviceName = serviceName;
+                this.ServiceName = serviceName;
                 this.Logo = logo;
             }
 
 
-            public string UniqueId => Extension.AppInfo.AppUserModelId + "!" + Extension.Id;
+            public string UniqueId => this.Extension.AppInfo.AppUserModelId + "!" + this.Extension.Id;
 
             public bool IsEnabled { get; internal set; }
 
 
 
-            internal async Task Update(AppExtension ext)
+            internal async Task UpdateAsync(AppExtension ext)
             {
                 // ensure this is the same uid
                 string identifier = ext.AppInfo.AppUserModelId + "!" + ext.Id;
@@ -260,7 +258,7 @@ namespace AppPlugin.PluginList
 
                 // get logo 
                 var filestream = await (ext.AppInfo.DisplayInfo.GetLogo(new Windows.Foundation.Size(1, 1))).OpenReadAsync();
-                BitmapImage logo = new BitmapImage();
+                var logo = new BitmapImage();
                 logo.SetSource(filestream);
 
                 // update the extension
@@ -270,18 +268,20 @@ namespace AppPlugin.PluginList
 
                 #region Update Properties
                 // update app service information
-                serviceName = null;
+                this.ServiceName = null;
                 if (properties != null)
                 {
                     if (properties.ContainsKey("Service"))
                     {
-                        PropertySet serviceProperty = properties["Service"] as PropertySet;
-                        this.serviceName = serviceProperty["#text"].ToString();
+                        var serviceProperty = properties["Service"] as PropertySet;
+                        this.ServiceName = serviceProperty["#text"].ToString();
                     }
                 }
 
-                if (serviceName == null)
+                if (this.ServiceName == null)
+                {
                     throw new Exception();
+                }
                 #endregion
             }
         }
@@ -296,21 +296,21 @@ namespace AppPlugin.PluginList
             private PluginConnection(AppServiceConnection connection, CancellationToken cancelTokem = default(CancellationToken))
             {
                 this.connection = connection;
-                connection.ServiceClosed += Connection_ServiceClosed;
-                connection.RequestReceived += Connection_RequestReceived;
+                connection.ServiceClosed += this.Connection_ServiceClosed;
+                connection.RequestReceived += this.Connection_RequestReceived;
 
                 this.cancelTokem = cancelTokem;
-                cancelTokem.Register(Canceld);
+                cancelTokem.Register(this.Canceld);
             }
 
             private async void Canceld()
             {
                 var valueSet = new ValueSet();
 
-                valueSet.Add(AbstractPlugin<object, object, object>.ID_KEY, id);
+                valueSet.Add(AbstractPlugin<object, object, object>.ID_KEY, this.id);
                 valueSet.Add(AbstractPlugin<object, object, object>.CANCEL_KEY, true);
 
-                await connection.SendMessageAsync(valueSet);
+                await this.connection.SendMessageAsync(valueSet);
             }
 
             private async void Connection_RequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
@@ -334,10 +334,10 @@ namespace AppPlugin.PluginList
 
             public void Dispose()
             {
-                if (isDisposed)
+                if (this.isDisposed)
                     return;
-                connection.Dispose();
-                isDisposed = true;
+                this.connection.Dispose();
+                this.isDisposed = true;
             }
 
         }

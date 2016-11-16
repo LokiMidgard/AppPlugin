@@ -39,43 +39,43 @@ namespace AppPlugin
 
         void IBackgroundTask.Run(IBackgroundTaskInstance taskInstance)
         {
-            if (useSyncronisationContext)
-                worker = new Nito.AsyncEx.AsyncContextThread();
+            if (this.useSyncronisationContext)
+                this.worker = new Nito.AsyncEx.AsyncContextThread();
 
 
-            dereffal = taskInstance.GetDeferral();
+            this.dereffal = taskInstance.GetDeferral();
 
             var details = taskInstance.TriggerDetails as AppServiceTriggerDetails;
-            details.AppServiceConnection.RequestReceived += AppServiceConnection_RequestReceived;
-            details.AppServiceConnection.ServiceClosed += AppServiceConnection_ServiceClosed; ;
-            taskInstance.Canceled += TaskInstance_Canceled;
+            details.AppServiceConnection.RequestReceived += this.AppServiceConnection_RequestReceivedAsync;
+            details.AppServiceConnection.ServiceClosed += this.AppServiceConnection_ServiceClosed; ;
+            taskInstance.Canceled += this.TaskInstance_Canceled;
 
         }
 
         private void TaskInstance_Canceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
         {
-            worker?.Dispose();
-            dereffal?.Complete();
-            dereffal = null;
+            this.worker?.Dispose();
+            this.dereffal?.Complete();
+            this.dereffal = null;
         }
 
         private void AppServiceConnection_ServiceClosed(AppServiceConnection sender, AppServiceClosedEventArgs args)
         {
-            worker?.Dispose();
-            dereffal?.Complete();
-            dereffal = null;
+            this.worker?.Dispose();
+            this.dereffal?.Complete();
+            this.dereffal = null;
         }
 
-        private async void AppServiceConnection_RequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
+        private async void AppServiceConnection_RequestReceivedAsync(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
         {
             var messageDereffal = args.GetDeferral();
             try
             {
                 // if we have a worker we use that.
-                if (worker != null)
-                    await worker.Factory.Run(() => RequestRecived(sender, args));
+                if (this.worker != null)
+                    await this.worker.Factory.Run(() => RequestRecivedAsync(sender, args));
                 else
-                    await RequestRecived(sender, args);
+                    await RequestRecivedAsync(sender, args);
 
             }
             finally
@@ -84,10 +84,10 @@ namespace AppPlugin
             }
         }
 
-        internal virtual async Task RequestRecived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
+        internal virtual async Task RequestRecivedAsync(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
         {
             if (args.Request.Message.ContainsKey(START_KEY))
-                await StartMessage(sender, args);
+                await StartMessageAsync(sender, args);
             else if (args.Request.Message.ContainsKey(CANCEL_KEY))
                 CancelMessage(sender, args);
         }
@@ -107,26 +107,26 @@ namespace AppPlugin
             if (!shouldCancel)
                 return;
 
-            if (!idDirectory.ContainsKey(id))
+            if (!this.idDirectory.ContainsKey(id))
                 return;
 
-            idDirectory[id].Cancel();
+            this.idDirectory[id].Cancel();
 
         }
 
 
-        private async Task StartMessage(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
+        private async Task StartMessageAsync(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
         {
             Guid? id = null;
             try
             {
                 id = (Guid)args.Request.Message[ID_KEY];
-                if (idDirectory.ContainsKey(id.Value))
+                if (this.idDirectory.ContainsKey(id.Value))
                     throw new Exceptions.PluginException("Start was already send.");
                 var cancellationTokenSource = new CancellationTokenSource();
-                idDirectory.Add(id.Value, cancellationTokenSource);
+                this.idDirectory.Add(id.Value, cancellationTokenSource);
 
-                object output = await PerformStart(sender, args, id, cancellationTokenSource);
+                object output = await PerformStartAsync(sender, args, id, cancellationTokenSource);
 
                 var outputString = Helper.Serilize(output);
                 var valueSet = new Windows.Foundation.Collections.ValueSet();
@@ -145,11 +145,11 @@ namespace AppPlugin
             finally
             {
                 if (id.HasValue)
-                    idDirectory.Remove(id.Value);
+                    this.idDirectory.Remove(id.Value);
             }
         }
 
-        internal abstract Task<TOut> PerformStart(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args, Guid? id, CancellationTokenSource cancellationTokenSource);
+        internal abstract Task<TOut> PerformStartAsync(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args, Guid? id, CancellationTokenSource cancellationTokenSource);
 
     }
 }

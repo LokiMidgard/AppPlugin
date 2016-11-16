@@ -60,7 +60,7 @@ namespace AppPlugin
         protected abstract Task<TOut> Execute(TIn input, IProgress<TProgress> progress, CancellationToken cancelToken);
 
 
-        internal override async Task<TOut> PerformStart(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args, Guid? id, CancellationTokenSource cancellationTokenSource)
+        internal override async Task<TOut> PerformStartAsync(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args, Guid? id, CancellationTokenSource cancellationTokenSource)
         {
             var inputString = args.Request.Message[START_KEY] as String;
 

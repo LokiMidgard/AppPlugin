@@ -70,7 +70,7 @@ namespace AppPlugin
         protected abstract Task<TOption> GetDefaultOptions();
 
 
-        internal override async Task RequestRecived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
+        internal override async Task RequestRecivedAsync(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
         {
 
             if (args.Request.Message.ContainsKey(OPTIONS_REQUEST_KEY))
@@ -84,11 +84,11 @@ namespace AppPlugin
 
             }
             else
-                await base.RequestRecived(sender, args);
+                await base.RequestRecivedAsync(sender, args);
         }
 
 
-        internal override async Task<TOut> PerformStart(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args, Guid? id, CancellationTokenSource cancellationTokenSource)
+        internal override async Task<TOut> PerformStartAsync(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args, Guid? id, CancellationTokenSource cancellationTokenSource)
         {
             var inputString = args.Request.Message[START_KEY] as String;
             var optionString = args.Request.Message[OPTION_KEY] as String;
