@@ -1,6 +1,6 @@
-﻿{  
+﻿{
   "dependencies": {
-    "Microsoft.NETCore.UniversalWindowsPlatform": "5.1.0",
+    "Microsoft.NETCore.UniversalWindowsPlatform": "5.2.2",
     "Nito.AsyncEx": "3.0.1"
   },
   "frameworks": {

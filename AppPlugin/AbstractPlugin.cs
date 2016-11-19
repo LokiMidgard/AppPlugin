@@ -45,9 +45,11 @@ namespace AppPlugin
         /// </exception>
         /// <param name="pluginName">The Plugin name defined in the appmanifest.</param>
         /// <returns>The <see cref="AppPlugin.PluginList<,,,>"/></returns>
-        public static PluginList<TIn, TOut, TProgress> List(string pluginName)
+        public static async Task<PluginList<TIn, TOut, TProgress>> ListAsync(string pluginName)
         {
-            return new PluginList<TIn, TOut, TProgress>(pluginName);
+            var pluginList = new PluginList<TIn, TOut, TProgress>(pluginName);
+            await pluginList.InitAsync();
+            return pluginList;
         }
 
         /// <summary>

@@ -48,9 +48,11 @@ namespace AppPlugin
         /// </exception>
         /// <param name="pluginName">The Plugin name defined in the appmanifest.</param>
         /// <returns>The <see cref="AppPlugin.PluginList<,,,>"/></returns
-        public static PluginList<TIn, TOut, TOption, TProgress> List(string pluginName)
+        public static async Task<PluginList<TIn, TOut, TOption, TProgress>> ListAsync(string pluginName)
         {
-            return new PluginList<TIn, TOut, TOption, TProgress>(pluginName);
+            var pluginList = new PluginList<TIn, TOut, TOption, TProgress>(pluginName);
+            await pluginList.InitAsync();
+            return pluginList;
         }
 
         /// <summary>
@@ -61,13 +63,13 @@ namespace AppPlugin
         /// <param name="progress">The Progress that will report data to the Client.</param>
         /// <param name="cancelToken">The cancel token.</param>
         /// <returns>The result of the execution.</returns>
-        protected abstract Task<TOut> Execute(TIn input, TOption options, IProgress<TProgress> progress, CancellationToken cancelToken);
+        protected abstract Task<TOut> ExecuteAsync(TIn input, TOption options, IProgress<TProgress> progress, CancellationToken cancelToken);
 
         /// <summary>
         /// Generates the Prototype Options the client can manipulate and pass back to the Plugin.
         /// </summary>
         /// <returns>The prototype options.</returns>
-        protected abstract Task<TOption> GetDefaultOptions();
+        protected abstract Task<TOption> GetDefaultOptionsAsync();
 
 
         internal override async Task RequestRecivedAsync(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
@@ -75,7 +77,7 @@ namespace AppPlugin
 
             if (args.Request.Message.ContainsKey(OPTIONS_REQUEST_KEY))
             {
-                var options = await GetDefaultOptions();
+                var options = await GetDefaultOptionsAsync();
 
                 var optionString = Helper.Serilize(options);
                 var valueSet = new ValueSet();
@@ -105,7 +107,7 @@ namespace AppPlugin
                 await sender.SendMessageAsync(dataSet);
             });
 
-            var output = await Execute(input, options, progress, cancellationTokenSource.Token);
+            var output = await ExecuteAsync(input, options, progress, cancellationTokenSource.Token);
             return output;
         }
 

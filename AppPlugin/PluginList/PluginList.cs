@@ -27,13 +27,13 @@ namespace AppPlugin.PluginList
 
         }
 
-        internal override PluginProvider CreatePluginProvider(AppExtension ext, string serviceName, BitmapImage logo)
-            => new PluginProvider(ext, serviceName, logo);
+        internal override PluginProvider CreatePluginProvider(AppExtension ext, string serviceName)
+            => new PluginProvider(ext, serviceName);
 
         public new sealed class PluginProvider : AbstractPluginList<TOut, PluginProvider>.PluginProvider, IPlugin<TIn, TOut, TProgress>
         {
 
-            internal PluginProvider(AppExtension ext, string serviceName, BitmapImage logo) : base(ext, serviceName, logo)
+            internal PluginProvider(AppExtension ext, string serviceName) : base(ext, serviceName)
             {
             }
 

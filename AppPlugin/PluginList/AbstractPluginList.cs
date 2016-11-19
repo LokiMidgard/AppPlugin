@@ -20,10 +20,10 @@ namespace AppPlugin.PluginList
 {
 
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-    public abstract class AbstractPluginList<TOut, TPluginProvider>
+    public abstract class AbstractPluginList<TOut, TPluginProvider> : IDisposable
         where TPluginProvider : AbstractPluginList<TOut, TPluginProvider>.PluginProvider
     {
-        private readonly CoreDispatcher dispatcher;
+        private readonly Nito.AsyncEx.AsyncContextThread workerThread;
         private AppExtensionCatalog catalog;
         private const string SERVICE_KEY = "Service";
         private readonly string pluginName;
@@ -36,7 +36,7 @@ namespace AppPlugin.PluginList
             this.pluginName = pluginName ?? throw new ArgumentNullException(nameof(pluginName));
             if (pluginName.Length > 39)
                 throw new ArgumentException($"The Plugin name is longer than 39. (was {pluginName.Length})");
-            this.dispatcher = Windows.UI.Core.CoreWindow.GetForCurrentThread().Dispatcher;
+            this.workerThread = new Nito.AsyncEx.AsyncContextThread();
             this.Plugins = new ReadOnlyObservableCollection<TPluginProvider>(this.plugins);
         }
 
@@ -65,21 +65,21 @@ namespace AppPlugin.PluginList
             // load all the extensions currently installed
             var extensions = await this.catalog.FindAllAsync();
 
-            foreach (var ext in extensions)
+            await this.workerThread.Factory.StartNew(async () =>
             {
-                // load this extension
-                await LoadExtensionAsync(ext);
-            }
+                foreach (var ext in extensions)
+                    await LoadExtensionAsync(ext);
+            }).Unwrap();
         }
 
 
         private async void Catalog_PackageInstalled(AppExtensionCatalog sender, AppExtensionPackageInstalledEventArgs args)
         {
-            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            await this.workerThread.Factory.StartNew(async () =>
             {
                 foreach (var ext in args.Extensions)
                     await LoadExtensionAsync(ext);
-            });
+            }).Unwrap();
         }
 
 
@@ -87,11 +87,11 @@ namespace AppPlugin.PluginList
 
         private async void Catalog_PackageUpdated(AppExtensionCatalog sender, AppExtensionPackageUpdatedEventArgs args)
         {
-            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            await this.workerThread.Factory.StartNew(async () =>
             {
                 foreach (var ext in args.Extensions)
                     await LoadExtensionAsync(ext);
-            });
+            }).Unwrap();
         }
 
 
@@ -173,17 +173,20 @@ namespace AppPlugin.PluginList
                 var serviceName = servicesProperty["#text"].ToString();
 
 
-                // get logo 
-                var filestream = await (ext.AppInfo.DisplayInfo.GetLogo(new Windows.Foundation.Size(1, 1))).OpenReadAsync();
-                var logo = new BitmapImage();
-                logo.SetSource(filestream);
+                try
+                {
+                    // create new extension
+                    var nExt = CreatePluginProvider(ext, serviceName);
 
-                // create new extension
-                var nExt = CreatePluginProvider(ext, serviceName, logo);
+                    // Add it to extension list
+                    this.plugins.Add(nExt);
+                    nExt.IsEnabled = true;
+                }
+                catch (Exception e)
+                {
 
-                // Add it to extension list
-                this.plugins.Add(nExt);
-                nExt.IsEnabled = true;
+                    throw;
+                }
             }
             // update
             else
@@ -194,32 +197,38 @@ namespace AppPlugin.PluginList
             }
         }
 
-        internal abstract TPluginProvider CreatePluginProvider(AppExtension ext, string serviceName, BitmapImage logo);
+        internal abstract TPluginProvider CreatePluginProvider(AppExtension ext, string serviceName);
 
         // loads all extensions associated with a package - used for when package status comes back
         private async Task LoadExtensionsAsync(Package package)
         {
-            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await this.workerThread.Factory.StartNew(() =>
             {
-                this.plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = true; });
+                foreach (var item in this.plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName))
+                    item.IsEnabled = true;
             });
         }
 
         // unloads all extensions associated with a package - used for updating and when package status goes away
         private async Task UnloadExtensionsAsync(Package package)
         {
-            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await this.workerThread.Factory.StartNew(() =>
             {
-                this.plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = false; });
+                foreach (var item in this.plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName))
+                    item.IsEnabled = false;
             });
         }
 
         // removes all extensions associated with a package - used when removing a package or it becomes invalid
         private async Task RemoveExtensionsAsync(Package package)
         {
-            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await this.workerThread.Factory.StartNew(() =>
             {
-                this.plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToList().ForEach(e => { e.IsEnabled = false; this.plugins.Remove(e); });
+                foreach (var item in this.plugins.Where(ext => ext.Extension.Package.Id.FamilyName == package.Id.FamilyName).ToArray())
+                {
+                    item.IsEnabled = false;
+                    this.plugins.Remove(item);
+                }
             });
         }
 
@@ -227,14 +236,27 @@ namespace AppPlugin.PluginList
         public abstract class PluginProvider
         {
             public AppExtension Extension { get; private set; }
-            public BitmapImage Logo { get; private set; }
+            public Task<BitmapImage> Logo
+            {
+                get
+                {
+                    // get logo 
+                    return this.Extension.AppInfo.DisplayInfo.GetLogo(new Windows.Foundation.Size(1, 1)).OpenReadAsync()
+                        .AsTask()
+                        .ContinueWith(filestreamTask =>
+                        {
+                            var logo = new BitmapImage();
+                            logo.SetSource(filestreamTask.Result);
+                            return logo;
+                        });
+                }
+            }
             protected string ServiceName { get; private set; }
 
-            internal PluginProvider(AppExtension ext, string serviceName, BitmapImage logo)
+            internal PluginProvider(AppExtension ext, string serviceName)
             {
                 this.Extension = ext;
                 this.ServiceName = serviceName;
-                this.Logo = logo;
             }
 
 
@@ -264,7 +286,6 @@ namespace AppPlugin.PluginList
                 // update the extension
                 this.Extension = ext;
 
-                this.Logo = logo;
 
                 #region Update Properties
                 // update app service information
@@ -341,5 +362,31 @@ namespace AppPlugin.PluginList
             }
 
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // Dient zur Erkennung redundanter Aufrufe.
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!this.disposedValue)
+            {
+                if (disposing)
+                {
+                    this.workerThread.Dispose();
+                }
+
+
+                this.disposedValue = true;
+            }
+        }
+
+
+        // Dieser Code wird hinzugefügt, um das Dispose-Muster richtig zu implementieren.
+        public void Dispose()
+        {
+            // Ändern Sie diesen Code nicht. Fügen Sie Bereinigungscode in Dispose(bool disposing) weiter oben ein.
+            Dispose(true);
+        }
+        #endregion
     }
 }

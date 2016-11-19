@@ -19,7 +19,7 @@ using Windows.UI.Xaml.Media.Imaging;
 namespace AppPlugin.PluginList
 {
 
-    public class PluginList<TIn, TOut, TOption, TProgress> : AbstractPluginList<TOut, PluginList< TIn, TOut, TOption, TProgress>.PluginProvider>
+    public class PluginList<TIn, TOut, TOption, TProgress> : AbstractPluginList<TOut, PluginList<TIn, TOut, TOption, TProgress>.PluginProvider>
     {
 
         internal PluginList(string pluginName) : base(pluginName)
@@ -27,18 +27,18 @@ namespace AppPlugin.PluginList
 
         }
 
-        public new sealed class PluginProvider : AbstractPluginList< TOut, PluginProvider>.PluginProvider, IPlugin<TIn, TOut, TOption, TProgress>
+        public new sealed class PluginProvider : AbstractPluginList<TOut, PluginProvider>.PluginProvider, IPlugin<TIn, TOut, TOption, TProgress>
         {
             public Task<TOption> PrototypeOptions { get; }
 
-            internal PluginProvider(AppExtension ext, string serviceName, BitmapImage logo) : base(ext, serviceName, logo)
+            internal PluginProvider(AppExtension ext, string serviceName) : base(ext, serviceName)
             {
                 this.PrototypeOptions = GetPlugin(null, default(CancellationToken)).ContinueWith(x => x.Result.RequestOptionsAsync()).Unwrap();
             }
 
 
             private Task<PluginConnection> GetPlugin(IProgress<TProgress> progress, CancellationToken cancelTokem) => PluginConnection.CreateAsync(this.ServiceName, this.Extension, progress, cancelTokem);
-            
+
             public async Task<TOut> ExecuteAsync(TIn input, TOption options, IProgress<TProgress> progress = null, CancellationToken cancelTokem = default(CancellationToken))
             {
                 using (var plugin = await GetPlugin(progress, cancelTokem))
@@ -46,8 +46,8 @@ namespace AppPlugin.PluginList
             }
         }
 
-        internal override PluginProvider CreatePluginProvider(AppExtension ext, string serviceName, BitmapImage logo)
-                    => new PluginProvider(ext, serviceName, logo);
+        internal override PluginProvider CreatePluginProvider(AppExtension ext, string serviceName)
+                    => new PluginProvider(ext, serviceName);
 
 
 
