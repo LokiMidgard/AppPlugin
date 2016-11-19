@@ -8,11 +8,15 @@
     <owners>$author$</owners>
     <licenseUrl>https://github.com/LokiMidgard/AppExtensionService/blob/master/License.md</licenseUrl>
     <projectUrl>https://github.com/LokiMidgard/AppExtensionService</projectUrl>
-    <!--<iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>-->
+    <iconUrl>https://github.com/LokiMidgard/AppExtensionService/blob/master/Assets/Logo.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <!--<releaseNotes>Summary of changes made in this release of the package.</releaseNotes>-->
+    <releaseNotes>
+      - Fixed Bugs
+      - Added Sample
+      - [BEAKING CHANGE] Method Signatures Changed
+    </releaseNotes>
     <copyright>Copyright 2016</copyright>
-    <tags>UWP AppService AppExtension</tags>
+    <tags>UWP AppService AppExtension Plugin</tags>
   </metadata>
 </package>
