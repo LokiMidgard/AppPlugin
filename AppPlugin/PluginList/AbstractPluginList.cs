@@ -33,7 +33,9 @@ namespace AppPlugin.PluginList
 
         internal AbstractPluginList(string pluginName)
         {
-            this.pluginName = pluginName ?? throw new ArgumentNullException(nameof(pluginName));
+            if (pluginName == null)
+                throw new ArgumentNullException(nameof(pluginName));
+            this.pluginName = pluginName;
             if (pluginName.Length > 39)
                 throw new ArgumentException($"The Plugin name is longer than 39. (was {pluginName.Length})");
             this.workerThread = new Nito.AsyncEx.AsyncContextThread();
